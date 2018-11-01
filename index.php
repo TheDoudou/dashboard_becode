@@ -11,8 +11,9 @@ if ($mysqli->connect_errno) {
     echo "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
 }
 
-$req = "SELECT * FROM dashboard WHERE date = '".date('Y-m-d')."'"; // Retourne la question de la journée
-$result = $mysqli->query($req);
+$result = $mysqli->query("SELECT * FROM dashboard WHERE date = '".date('Y-m-d')."'"); // Checherche une citation avec la date du jour
+if (mysqli_num_rows($result) == 0) // Si il n'y a pas d'entrée avec la date actuel il prend toutes les entrées sans date
+    $result = $mysqli->query("SELECT * FROM dashboard WHERE date = '0000-00-00'");
 
 $i = 0;
 
@@ -23,23 +24,10 @@ while ($row = $result->fetch_array()){
         $i++;
 }
 
-if ($i == 0) { // Si il n'y a pas d'entrée avec la date actuel il prend toutes les entrées sans date
-    $req = "SELECT * FROM dashboard WHERE date = '0000-00-00'"; 
-    $result = $mysqli->query($req);
-    while ($row = $result->fetch_array()){
-        $citations[$i][0] = $row['question'];
-        $citations[$i][1] = $row['date'];
-        $citations[$i][2] = $row['id'];
-        $i++;
-    }
-}
-
 $rand = rand(0, $i-1);
 
-if ($citations[$rand][1] == '0000-00-00') {
-    $req = "UPDATE dashboard SET date = '".date('Y-m-d')."' WHERE dashboard.id = ".$citations[$rand][2]; // Ajout de la date à un element pour le re trouvé si la page reload
-    $mysqli->query($req);
-}
+if ($citations[$rand][1] == '0000-00-00') // Si la citation choisi en random n'a pas de date alors il set la date du jour
+    $mysqli->query("UPDATE dashboard SET date = '".date('Y-m-d')."' WHERE dashboard.id = ".$citations[$rand][2]);
 
 function github_request($url)
 {
